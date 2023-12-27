@@ -15,17 +15,14 @@ router.get('/projects', function (req, res, next) {
 });
 
 router.post('/add', function (req, res, next) {
-    setData(req.body, "timeTracker.json", req.params.id);
+    const { id, data } = req.body;
+    setData(data, id, "timeTracker.json"); // Pass the address as a parameter
 });
-
-
 
 async function getProjects(address) {
     try {
         const fileContent = await fs.readFile(address, 'utf8');
-
         const jsonData = JSON.parse(fileContent);
-
         console.log('JSON data read from', address);
         return jsonData;
     } catch (error) {
@@ -34,26 +31,31 @@ async function getProjects(address) {
     }
 }
 
-
-
-async function setData(data, filePath , id) {
+async function setData(data, id, address) {
     try {
-        const newString = JSON.stringify(data, null, 2);
-
+        const dataJson = JSON.stringify(data, null, 2);
         const fileContent = await fs.readFile(address, 'utf8');
-
         const jsonData = JSON.parse(fileContent);
 
         const dataChoose = jsonData.find(project => project.projectID === id);
+        if (dataChoose) {
+            // Check if 'times' is defined in dataChoose, and if not, initialize it as an empty object
+            dataChoose.times = dataChoose.times || {};
+            console.log(dataChoose);
+            // Update 'times' with the new data
+            dataChoose.times = { ...dataChoose.times, ...dataJson };
 
-        dataChoose.times = {...project.times, ...newString};
+            // Write back the entire jsonData
+            await fs.writeFile(address, JSON.stringify(jsonData, null, 2));
 
-        await fs.appendFile(filePath, dataChoose, 'utf8');
-
-        console.log('JSON data has been saved to', filePath);
+            console.log('JSON data has been saved to', address);
+        } else {
+            console.log(`Project with projectID ${id} not found`);
+        }
     } catch (error) {
         console.error('Error saving JSON data:', error.message);
     }
 }
+
 
 module.exports = router;

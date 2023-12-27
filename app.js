@@ -21,7 +21,7 @@ app.use('/users', usersRouter);
 app.use('/timetracker', timeTracker);
 
 app.listen(3000, () => {
-    console.log("HI");
+    
 })
 
 module.exports = app;
